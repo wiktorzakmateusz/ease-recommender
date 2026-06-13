@@ -10,17 +10,18 @@ void compute_gram_matrix_csr(const double* data, const int* indices, const int* 
     memset(out_G, 0, sizeof(double) * n_items * n_items);
 
     // using dynamic scheduling to balance the load since the number of interactions per user varies
+    int u, i, j;
     #pragma omp parallel for schedule(dynamic)
-    for (int u = 0; u < n_users; u++) {
+    for (u = 0; u < n_users; u++) {
         int start = indptr[u];
         int end = indptr[u + 1];
         
         // computing only the upper triangle of the symmetric matrix to halve computational cost
-        for (int i = start; i < end; i++) {
+        for (i = start; i < end; i++) {
             int item_i = indices[i];
             double val_i = data[i];
             
-            for (int j = i; j < end; j++) {
+            for (j = i; j < end; j++) {
                 int item_j = indices[j];
                 double val_j = data[j];
 
@@ -34,8 +35,8 @@ void compute_gram_matrix_csr(const double* data, const int* indices, const int* 
 
     // using static scheduling because the workload per row is predictable and equal
     #pragma omp parallel for schedule(static)
-    for (int i = 0; i < n_items; i++) {
-        for (int j = i; j < n_items; j++) {
+    for (i = 0; i < n_items; i++) {
+        for (j = i; j < n_items; j++) {
             if (i == j) {
                 out_G[i * n_items + j] += reg_weight;
             } else {
