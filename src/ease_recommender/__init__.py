@@ -1,11 +1,5 @@
 import sys
-
-from .model import EASE
-
-__version__ = "0.1.0"
-__all__ = [
-    "EASE",
-]
+import os
 
 # explicit adding GSL binary directory for Windows
 if sys.platform == "win32" and sys.version_info >= (3, 8):
@@ -16,3 +10,11 @@ if sys.platform == "win32" and sys.version_info >= (3, 8):
     
     if os.path.exists(gsl_bin):
         os.add_dll_directory(gsl_bin)
+
+from .model import EASE
+
+__version__ = "0.1.0"
+__all__ = [
+    "EASE",
+]
+
