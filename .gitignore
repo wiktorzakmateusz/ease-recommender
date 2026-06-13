@@ -1,0 +1,33 @@
+# venv
+.venv/
+venv/
+env/
+
+# build
+*.so
+*.o
+*.pyc
+*.pyo
+__pycache__/
+build/
+dist/
+*.egg-info/
+*.egg
+
+# testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+.DS_Store
+.idea/
+
+# docs
+docs/build/
+docs/_build/
+
+# personal
+main.py
