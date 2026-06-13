@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ease_recommender.model &mdash; ease_recommender 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ease_recommender
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation.html">Install ease_recommender</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/quickstart.html">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/benchmarking.html">Benchmarking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ease_model.html">EASE</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ease_recommender</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ease_recommender.model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ease_recommender.model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">ease_core</span> 
+<span class="kn">import</span> <span class="nn">os</span>
+
+<div class="viewcode-block" id="EASE">
+<a class="viewcode-back" href="../../api/ease_model.html#ease_recommender.EASE">[docs]</a>
+<span class="k">class</span> <span class="nc">EASE</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_weight</span><span class="o">=</span><span class="mf">250.0</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the EASE (Embarrassingly Shallow Autoencoders) model.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">            Harald Steck. “Embarrassingly Shallow Autoencoders for Sparse Data”. In: The World</span>
+<span class="sd">            Wide Web Conference. 2019, pp. 3251-3257</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reg_weight : float, optional</span>
+<span class="sd">            The L2 regularization factor (lambda) to penalize large weights </span>
+<span class="sd">            and prevent overfitting. Default is 250.0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reg_weight</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="EASE.fit">
+<a class="viewcode-back" href="../../api/ease_model.html#ease_recommender.EASE.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train_csr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Train the model using the C-optimized Gram matrix calculation </span>
+<span class="sd">        and GSL Cholesky inversion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X_train_csr : (U, I) scipy.sparse.csr_matrix</span>
+<span class="sd">            The user-item interaction matrix where rows are users and </span>
+<span class="sd">            columns are items.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The method computes and stores the dense weight matrix `self.B` </span>
+<span class="sd">            in-place as a float32 contiguous array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># ensuring the matrix is strictly in csr format to allow highly efficient row-wise memory access </span>
+        <span class="c1"># in the c layer</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sp</span><span class="o">.</span><span class="n">isspmatrix_csr</span><span class="p">(</span><span class="n">X_train_csr</span><span class="p">):</span>
+            <span class="n">X_train_csr</span> <span class="o">=</span> <span class="n">X_train_csr</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span> <span class="o">=</span> <span class="n">X_train_csr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">num_users</span> <span class="o">=</span> <span class="n">X_train_csr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># forcing memory to be C-contiguous and strictly typed, this allows the C-api wrapper to </span>
+        <span class="c1"># extract raw memory pointers instantly without triggering implicit copying or casting overhead,</span>
+        <span class="c1"># using float64 is mandatory here to maintain numerical stability during gsl matrix inversion</span>
+        <span class="n">data_fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">X_train_csr</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">indices_fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">X_train_csr</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">indptr_fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">X_train_csr</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="c1"># offloading the O(n^3) gram matrix computation and inversion entirely to the compiled c/gsl backend</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">ease_core</span><span class="o">.</span><span class="n">compute_and_invert_gram</span><span class="p">(</span>
+            <span class="n">data_fixed</span><span class="p">,</span> 
+            <span class="n">indices_fixed</span><span class="p">,</span> 
+            <span class="n">indptr_fixed</span><span class="p">,</span>
+            <span class="n">num_users</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_weight</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># computing the final ease weight matrix using highly vectorized numpy operations,</span>
+        <span class="c1"># this final step is extremely fast and does not require C-level intervention</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="n">P</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="c1"># downcasting to float32 to instantly halve the memory footprint of the dense weight matrix,</span>
+        <span class="c1"># enforcing c_contiguous layout guarantees optimal hardware cache prefetching during inference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EASE.predict_new_user">
+<a class="viewcode-back" href="../../api/ease_model.html#ease_recommender.EASE.predict_new_user">[docs]</a>
+    <span class="k">def</span> <span class="nf">predict_new_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interacted_item_ids</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict top-K recommendations for a new user based on their interaction history.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interacted_item_ids : (N,) array_like</span>
+<span class="sd">            A 1D array or list of item indices the user has already interacted with.</span>
+<span class="sd">        k : int, optional</span>
+<span class="sd">            The number of top recommendations to return. Default is 20.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        top_k_indices : (K,) ndarray</span>
+<span class="sd">            An array of the recommended item indices sorted by score in descending order. </span>
+<span class="sd">            Returns an empty array if the requested K is invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;model is not fitted yet. call &#39;fit&#39; first.&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># enforcing a contiguous 32-bit integer array to satisfy the strict type requirements of the </span>
+        <span class="c1"># C inference wrapper</span>
+        <span class="n">interacted_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">interacted_item_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        
+        <span class="c1"># capping k to the maximum available unseen items to prevent buffer overflow or out-of-bounds</span>
+        <span class="c1"># memory access in C</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">interacted_arr</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="c1"># bypassing python interpreter overhead by piping the strict numpy memory blocks directly into </span>
+        <span class="c1"># the C inference engine</span>
+        <span class="n">top_k_indices</span> <span class="o">=</span> <span class="n">ease_core</span><span class="o">.</span><span class="n">predict_top_k</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> 
+            <span class="n">interacted_arr</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span><span class="p">,</span> 
+            <span class="n">k</span>
+        <span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">top_k_indices</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Mateusz Wiktorzak.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
