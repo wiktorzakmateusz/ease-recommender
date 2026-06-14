@@ -85,8 +85,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="ease_recommender.EASE.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train_csr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ease_recommender/model.html#EASE.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ease_recommender.EASE.fit" title="Link to this definition"></a></dt>
-<dd><p>Train the model using the C-optimized Gram matrix calculation
-and GSL Cholesky inversion.</p>
+<dd><p>Train the model by computing the Gram matrix directly from sparse CSR,
+followed by high-precision GSL Cholesky inversion.</p>
+<p>The underlying C engine utilizes cache blocking to maximize L1 cache hits
+and sequential memory prefetching, ensuring high-throughput inference even
+with massive item catalogs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>X_train_csr</strong> (<em>(</em><em>U</em><em>, </em><em>I</em><em>) </em><em>scipy.sparse.csr_matrix</em>) – The user-item interaction matrix where rows are users and
@@ -105,16 +108,19 @@ in-place as a float32 contiguous array.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ease_recommender.EASE.predict_new_user">
 <span class="sig-name descname"><span class="pre">predict_new_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interacted_item_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ease_recommender/model.html#EASE.predict_new_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ease_recommender.EASE.predict_new_user" title="Link to this definition"></a></dt>
-<dd><p>Predict top-K recommendations for a new user based on their interaction history.</p>
+<dd><p>Predict top-K recommendations for a new user based on their interaction
+history.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>interacted_item_ids</strong> (<em>(</em><em>N</em><em>,</em><em>) </em><em>array_like</em>) – A 1D array or list of item indices the user has already interacted with.</p></li>
+<li><p><strong>interacted_item_ids</strong> (<em>(</em><em>N</em><em>,</em><em>) </em><em>array_like</em>) – A 1D array or list of item indices the user has already interacted
+with.</p></li>
 <li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of top recommendations to return. Default is 20.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>top_k_indices</strong> – An array of the recommended item indices sorted by score in descending order.
+<dd class="field-even"><p><strong>top_k_indices</strong> – An array of the recommended item indices sorted by score in descending
+order.
 Returns an empty array if the requested K is invalid.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>

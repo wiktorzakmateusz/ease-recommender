@@ -19,8 +19,8 @@ URM = np.array([
 # convert to CSR sparse matrix
 X_csr = sp.csr_matrix(URM)
 
-# initialize with your preferred L2 regularization weight
-model = EASE(reg_weight=100.0)
+# initialize with your preferred L2 regularization weight and number of CPU threads
+model = EASE(reg_weight=100.0, num_threads=10)
 
 # fit on a CSR sparse matrix
 model.fit(X_csr)

@@ -80,15 +80,15 @@
              
   <section id="ease-recommender-package">
 <h1>ease_recommender package<a class="headerlink" href="#ease-recommender-package" title="Link to this heading"></a></h1>
-<p>A high-performance implementation of the Embarrassingly Shallow Autoencoders (EASE) recommendation algorithm. This package bridges the gap between Python’s ease of use and C’s raw computational power, delivering near-instant recommendations even for large item catalogs.</p>
+<p>A high-performance implementation of the Embarrassingly Shallow Autoencoders (EASE) recommendation algorithm. This package bridges the gap between Python’s ease of use and C’s raw computational power, enabling exceptionally fast training on sparse datasets and Top-K inference for large item catalogs.</p>
 <section id="why-this-implementation">
 <h2>Why this implementation?<a class="headerlink" href="#why-this-implementation" title="Link to this heading"></a></h2>
-<p>Standard SciPy/NumPy implementations of EASE often struggle with the <span class="math notranslate nohighlight">\(O(I^3)\)</span> computational complexity of the Gram matrix inversion. This package optimizes the bottleneck by:</p>
+<p>Standard SciPy/NumPy implementations of EASE often struggle under the weight of the algorithm’s mathematical bottlenecks. This package optimizes the entire pipeline by shifting all heavy computing, specifically the Gram matrix construction, the <span class="math notranslate nohighlight">\(O(I^3)\)</span> matrix inversion, and the Top-K inference, down to a highly optimized C layer. It achieves this by:</p>
 <ul class="simple">
-<li><p><strong>Parallelization:</strong> Leveraging OpenMP for multi-threaded Gram matrix construction</p></li>
-<li><p><strong>Cache-Blocking:</strong> Using tiled loop structures to maximize L1 cache hits during inference</p></li>
-<li><p><strong>Numerical Stability:</strong> Utilizing the GNU Scientific Library (GSL) for high-precision Cholesky decomposition</p></li>
-<li><p><strong>Memory Efficiency:</strong> Using zero-copy C-API buffers to communicate directly with NumPy</p></li>
+<li><p><strong>Sparse Matrix Multiplication:</strong> Computing the item-item Gram matrix (<span class="math notranslate nohighlight">\(X^T X\)</span>) directly from Compressed Sparse Row (CSR) arrays, leveraging OpenMP multi-threading to accelerate training.</p></li>
+<li><p><strong>High-Performance Inversion:</strong> Utilizing the GNU Scientific Library (GSL) to perform mathematically robust, in-place Cholesky decomposition and inversion on the symmetric Gram matrix, minimizing RAM overhead.</p></li>
+<li><p><strong>Cache-Aware Inference:</strong> Employing cache-blocked loop structures to maximize L1 hardware cache hits and sequential memory prefetching during Top-K prediction.</p></li>
+<li><p><strong>Zero-Copy Memory:</strong> Using the NumPy C-API to share direct memory pointers between Python and C, eliminating expensive data duplication and casting overhead during runtime.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Get Started</span></p>

@@ -34,11 +34,11 @@ $env:GSL_ROOT = "C:/vcpkg/installed/x64-windows"
 
 Download the source files from GitHub.
 ```bash
-git clone https://github.com/wiktorzakmateusz/ease_recommender.git && cd ease_recommender
+git clone https://github.com/wiktorzakmateusz/ease-recommender.git && cd ease_recommender
 ```
 
 Run the following command to install:
 
 ```bash
-pip install -e
+pip install -e .
 ```

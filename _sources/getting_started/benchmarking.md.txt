@@ -1,6 +1,6 @@
 # Benchmarking
 
-To check the gain obtained by using the package, use $benchmark.py$ code:
+To check the gain obtained by using the package, use *benchmark.py* code:
 
 ```bash
 python benchmark.py --num_threads=10 --repeats=5
