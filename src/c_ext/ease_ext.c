@@ -41,7 +41,7 @@ static PyObject* py_compute_and_invert_gram(PyObject* self, PyObject* args) {
     PyArrayObject *out_G_arr = (PyArrayObject*)PyArray_SimpleNew(2, dims, NPY_FLOAT64);
     double* out_G = (double*)PyArray_DATA(out_G_arr);
 
-    // computes X^T X using parallelized C
+    // computes X^T X + reg using parallelized C
     compute_gram_matrix_csr(data, indices, indptr, n_users, n_items, reg_weight, out_G);
 
     // runs gsl cholesky inversion in-place directly on the numpy memory buffer

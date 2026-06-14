@@ -16,11 +16,11 @@ void compute_gram_matrix_csr(const double* data, const int* indices, const int* 
         int start = indptr[u];
         int end = indptr[u + 1];
         
-        // computing only the upper triangle of the symmetric matrix to halve computational cost
         for (i = start; i < end; i++) {
             int item_i = indices[i];
             double val_i = data[i];
             
+            // computing only the upper triangle of the symmetric matrix to halve computational cost
             for (j = i; j < end; j++) {
                 int item_j = indices[j];
                 double val_j = data[j];
